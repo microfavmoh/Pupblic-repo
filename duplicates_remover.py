@@ -28,8 +28,8 @@ def dup_remover(directory):
         time.sleep(2)
         print("files that may still be duplicates:")
         time.sleep(2)
-        for index_list in range(len(non_hashable_files)):
-            print(non_hashable_files[index_list])
+        for file in non_hashable_files:
+            print(file)
             time.sleep(1)
 
 while not directory:

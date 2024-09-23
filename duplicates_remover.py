@@ -32,5 +32,4 @@ def dup_remover(directory):
 
 while not directory:
     directory=askdirectory()
-else:
-    dup_remover(directory)     
+dup_remover(directory)     

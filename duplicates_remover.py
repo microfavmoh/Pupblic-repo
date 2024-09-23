@@ -1,32 +1,38 @@
 import hashlib
 import os
 import time
+from tkinter.filedialog import askdirectory
 
-directory=input("please enter the folder you want to delete the duplicates in")
+directory=askdirectory()
 hashes=set()
-index=1
 non_hashable_files=[]
 
-for filename in os.listdir(directory):
-    print(f"{index}-{filename}")
-    index+=1
-    try:
+def dup_remover(directory):
+    for filename in os.listdir(directory):
         path=os.path.join(directory, filename)
-        digest=hashlib.sha512(open(path,'rb').read()).digest()
-        if digest not in hashes:
-            hashes.add(digest)
-        else:
-            os.remove(path)
-    except Exception as e:
-        non_hashable_files.append(filename)
+        try:
+            hash=hashlib.sha512(open(path,'rb').read()).digest()
+            if hash not in hashes:
+                hashes.append(hash)
+            else:
+                os.remove(path)
+        except Exception as e:
+            non_hashable_files.append(filename)
+        if os.path.isdir(path):
+            dup_remover(path)
 
-if len(non_hashable_files)==0:
-    print("the operation was completed sucessfuly")
-    pass
+    if len(non_hashable_files)==0:
+        print("the operation was completed sucessfuly")
+        pass
+    else:
+        time.sleep(2)
+        print("files that may still be duplicates:")
+        time.sleep(2)
+        for index_list in range(len(non_hashable_files)):
+            print(non_hashable_files[index_list])
+            time.sleep(1)
+
+while not directory:
+    directory=askdirectory()
 else:
-    time.sleep(2)
-    print("folders that may still contain duplicates:")
-    time.sleep(2)
-    for index_list in range(len(non_hashable_files)):
-        print(non_hashable_files[index_list])
-        time.sleep(1)
+    dup_remover(directory)     

@@ -8,18 +8,16 @@ hashes=set()
 non_hashable_files=[]
 
 def dup_remover(directory):
+    global hashes
     for filename in os.listdir(directory):
         path=os.path.join(directory, filename)
-        try:
-            hash=hashlib.sha512(open(path,'rb').read()).digest()
-            if hash not in hashes:
-                hashes.append(hash)
-            else:
-                os.remove(path)
-        except Exception as e:
-            non_hashable_files.append(filename)
         if os.path.isdir(path):
             dup_remover(path)
+        hash=hashlib.sha512(open(path,'rb').read()).digest()
+        if hash not in hashes:
+            hashes.add(hash)
+        else:
+            os.remove(path)
 
     if not non_hashable_files:
         print("the operation was completed sucessfuly")

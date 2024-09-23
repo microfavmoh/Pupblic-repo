@@ -21,7 +21,7 @@ def dup_remover(directory):
         if os.path.isdir(path):
             dup_remover(path)
 
-    if len(non_hashable_files)==0:
+    if not non_hashable_files:
         print("the operation was completed sucessfuly")
         pass
     else:

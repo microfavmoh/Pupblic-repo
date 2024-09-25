@@ -1,35 +1,26 @@
 from tkinter import *
-import os
-import json
-import hashlib
+from os import getenv
+from os.path import join,exists
+from json import load,dumps
+from hashlib import sha256
 
 class main:
-    appdata=os.getenv('APPDATA')
-    path_=os.path.join(appdata,'user_data.json')
+    path_=join(getenv('APPDATA'),'user_data.json')
     screen=Tk()
     screen.attributes("-fullscreen",True)
     screen.title("place holder title")
     font_=("Product Sans",10)
     font_warning=("Product Sans",15,"bold")
-    username=Entry(screen)
-    password=Entry(screen,show='x')
-    password_show_counter=0
+
+    show_password=False
     def show_password_func():
-        if main.password_show_counter % 2==0:
-            main.show_password.configure(text='hide password')
-            main.password.configure(show='')
+        main.show_password=not main.show_password
+        if main.show_password:
+            main.show_password_button.configure(text="hide password")
+            main.password.configure(show="")
         else:
-            main.show_password.configure(text='show password')
-            main.password.configure(show='x')
-        main.password_show_counter+=1
-    show_password=Button(bg='yellow',text='show password',command=show_password_func,border=0)
-    text_username=Label(text="enter your username")
-    text_password=Label(text="enter your password")
-    text_username.place(relx=0.5,rely=0.2,anchor="center")
-    text_password.place(relx=0.5,rely=0.3,anchor="center")
-    username.place(relx=0.5,rely=0.24,anchor="center")
-    password.place(relx=0.5,rely=0.34,anchor="center")
-    show_password.place(relx=0.6,rely=0.34,anchor="center")
+            main.show_password_button.configure(text="show password")
+            main.password.configure(show="x")
 
     def throw_warning(text_):
         for widget in main.screen.winfo_children():
@@ -42,15 +33,21 @@ class main:
         warning_error.place(relx=0.5,rely=0.45,anchor="center")
 
     def text_encrypter(string):
-            string=string.encode("utf-8")
-            return hashlib.sha256(string).hexdigest()
+        string=string.encode("utf-8")
+        return sha256(string).hexdigest()
     
+    username=Entry(screen)
+    password=Entry(screen,show='x')
+    show_password_button=Button(bg='yellow',text='show password',command=show_password_func,border=0)
+    text_username=Label(text="enter your username")
+    text_password=Label(text="enter your password")
+
     #this function checks input when the user tries to sign up
-    def value_checker():
+    def signup_check():
         username=main.username
         password=main.password
-        username=str(username.get())
-        password=str(password.get())
+        username=username.get()
+        password=password.get()
         path_=main.path_
         if len(username)==0:
             main.throw_warning("enter your username")
@@ -77,9 +74,9 @@ class main:
         else:
             pass
 
-        if os.path.exists(path_)==True:
+        if exists(path_)==True:
             with open(path_,'r') as file:
-                file=json.load(file)
+                file=load(file)
                 if main.text_encrypter(username) in file:
                     main.throw_warning("username already exists")
                     return None
@@ -156,26 +153,24 @@ class main:
             main.throw_warning("password must contain a special character")
             return None
 
-        if os.path.exists(path_)==False:
+        if exists(path_)==False:
             user_data={main.text_encrypter(username):main.text_encrypter(password)}
             with open(path_,'w') as file:
-                file.write(json.dumps(user_data,indent=4))
-                file.close()
+                file.write(dumps(user_data,indent=4))
         else:
             with open(path_,'r') as file:
-                file_data=json.load(file)
+                file_data=load(file)
                 file_data[main.text_encrypter(username)]=main.text_encrypter(password)
             with open(path_,'w') as file:
-                file.write(json.dumps(file_data,indent=4)) 
+                file.write(dumps(file_data,indent=4)) 
         print("Signed in")
 
     #this is the signup button which appears on the first screen
-    button=Button(command=value_checker,background="yellow",text="Sign up",bd=0)
-    button.place(relx=0.5,rely=0.4,anchor="center")
+    button=Button(command=signup_check,background="yellow",text="Sign up",bd=0)
 
     #the function bellow checks input when
     #the user tries to login
-    def check():
+    def login_check():
         username=main.username
         password=main.password
         username=username.get()
@@ -184,7 +179,7 @@ class main:
             main.throw_warning("enter your username")
             return None  
         with open(main.path_,'r') as file:
-            file=json.load(file)
+            file=load(file)
             if main.text_encrypter(username) not in file:
                 main.throw_warning("username doesn't exsist")
                 return None
@@ -201,11 +196,11 @@ class main:
 
     #this function is used when you press the login button 
     def login():
-        if os.path.exists(main.path_)==True:
-            main.button.configure(text='Login',command=main.check)
+        if exists(main.path_)==True:
+            main.button.configure(text='Login',command=main.login_check)
             #this function is called when you press the sign up buttton in the login screen
             def logintosignup():
-                main.button.configure(text='Signup',command=main.value_checker)
+                main.button.configure(text='Signup',command=main.signup_check)
                 main.button_login.configure(text='Login',command=main.login)
             main.button_login.configure(text='signup',command=logintosignup)
         else:
@@ -213,7 +208,15 @@ class main:
 
     #this is the login button which appears at the top right corner of the screen
     button_login=Button(command=login,background="yellow",text="Login",bd=0)
+
+    text_username.place(relx=0.5,rely=0.2,anchor="center")
+    text_password.place(relx=0.5,rely=0.3,anchor="center")
+    username.place(relx=0.5,rely=0.24,anchor="center")
+    password.place(relx=0.5,rely=0.34,anchor="center")
+    show_password_button.place(relx=0.6,rely=0.34,anchor="center")
+    button.place(relx=0.5,rely=0.4,anchor="center")
     button_login.place(relx=0.95,rely=0.04)
+
     widgets=screen.winfo_children()
     for widget in widgets:
         widget.configure(font=font_)

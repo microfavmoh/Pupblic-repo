@@ -3,7 +3,7 @@ from tkinter.ttk import Combobox
 from pynput.mouse import Controller,Listener as mouse_listener,Button
 from pynput.keyboard import Listener, KeyCode
 import tkinter
-from threading import enumerate,Thread
+from threading import Thread
 
 clicking=False
 auto_clicking=True
@@ -70,16 +70,10 @@ repeat_forever=tkinter.Radiobutton(text="repeat forever",value=0,variable=click_
 repeat_specified_number_times=tkinter.Radiobutton(text="repeat specified number of times",value=1,variable=click_repetition_determiner)
 specified_number_times=tkinter.Entry()
 start_key_label=tkinter.Label(text="start key")
-start_key=tkinter.Entry(width=2)
+start_key_entry=tkinter.Entry(width=2)
 end_key_label=tkinter.Label(text="end key")
-end_key=tkinter.Entry(width=2)
+end_key_entry=tkinter.Entry(width=2)
 stop_button=tkinter.Button(text="enable typing mode",command=stop_auto_clicker)
-
-mouse_button_options.current("0")
-click_type_options.current("0")
-clicks_per_second.insert("0",10)
-end_key.insert("0","h")
-start_key.insert("0","h")
 
 label_dellay.place(relx=0.3,rely=0.05)
 label_milliseconds.place(relx=0.07,rely=0.1)
@@ -110,10 +104,16 @@ repeat_forever.place(relx=0.07,rely=0.66)
 repeat_specified_number_times.place(relx=0.07,rely=0.71)
 specified_number_times.place(relx=0.08,rely=0.76)
 start_key_label.place(relx=0.07,rely=0.84)
-start_key.place(relx=0.19,rely=0.84)
+start_key_entry.place(relx=0.19,rely=0.84)
 end_key_label.place(relx=0.25,rely=0.84)
-end_key.place(relx=0.37,rely=0.84)
+end_key_entry.place(relx=0.37,rely=0.84)
 stop_button.place(relx=0.47,rely=0.84)
+
+mouse_button_options.current("0")
+click_type_options.current("0")
+clicks_per_second.insert("0",10)
+end_key_entry.insert("0",".")
+start_key_entry.insert("0",".")
 
 for widget in screen.winfo_children():
     widget.configure(font=font)
@@ -121,20 +121,20 @@ for widget in screen.winfo_children():
         widget.insert("0",0)
 
 def on_press(key):
-    start_key_=KeyCode(char=start_key.get())
-    end_key_=KeyCode(char=end_key.get())
     if auto_clicking:
+        start_key=KeyCode(char=start_key_entry.get())
+        end_key=KeyCode(char=end_key_entry.get())
         global clicking
-        if start_key_==end_key_:
-            if key==start_key_:
+        if start_key==end_key:
+            if key==start_key:
                 clicking=not clicking
         else:
-            if key==start_key_:
+            if key==start_key:
                 clicking=True
-            if key==end_key_:
+            elif key==end_key:
                 clicking=False
-        if clicking and len(enumerate())==6:
-            auto_clicker_thread=Thread(target=auto_clicker)                                             
+        auto_clicker_thread=Thread(target=auto_clicker) 
+        if clicking and not auto_clicker_thread.is_alive():                                           
             auto_clicker_thread.start()
 
 def auto_clicker():
@@ -144,7 +144,7 @@ def auto_clicker():
             entry.delete("0","end")
             entry.insert("0",0)
     try:
-        dellay=float(milliseconds.get())/1000
+        dellay=float(milliseconds.get())*0.001
         dellay+=float(seconds.get())
         dellay+=float(minutes.get())*60
         dellay+=float(hours.get())*3600

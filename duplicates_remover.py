@@ -1,4 +1,4 @@
-import hashlib
+from hashlib import sha256
 import os
 from tkinter.filedialog import askdirectory
 
@@ -11,7 +11,7 @@ def dup_remover(directory):
         if os.path.isdir(path):
             dup_remover(path)
             continue
-        hash=hashlib.sha256(open(path,'rb').read()).digest()
+        hash=sha256(open(path,'rb').read()).digest()
         if hash not in hashes:
             hashes.add(hash)
         else:

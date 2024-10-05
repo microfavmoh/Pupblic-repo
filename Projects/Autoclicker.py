@@ -1,46 +1,44 @@
 from time import sleep
 from tkinter.ttk import Combobox
 from pynput.mouse import Controller,Listener as mouse_listener,Button
-from pynput.keyboard import Listener, KeyCode
+from pynput.keyboard import Listener,KeyCode
 import tkinter
 from threading import Thread
 
-clicking=False
-auto_clicking=True
+clicking:bool=False
+auto_clicking:bool=True
 mouse=Controller()
-font=("Product Sans",8)
-specified_positions_list=[]
+font:tuple=("Product Sans",8)
+specified_positions_set:set[tuple[int]]={}
 
-screen=tkinter.Tk()
-screen.geometry("400x400")
-screen.resizable(False,False)
-screen.title("Autoclicker")
-click_position_determiner=tkinter.IntVar()
-click_repetition_determiner=tkinter.IntVar()
+def clear_config()->None:
+    specified_positions_set.clear()
 
-def clear_config():
-    global specified_positions_list
-    specified_positions_list.clear()
-
-def x_y_graber():
-    screen.withdraw()
-    def on_click(x,y,pressed,button):
-        if pressed:
-            specified_positions_list.append((x,y))
-            screen.deiconify()
-            return False
-    listener=mouse_listener(on_click=on_click)
-    listener.start()
-
-def stop_auto_clicker():
-    global clicking,auto_clicking
+def stop_auto_clicker()->None:
+    global auto_clicking,clicking
     auto_clicking=not auto_clicking
     clicking=False
     if auto_clicking:
         stop_button.configure(text="enable typing mode")
     else:
-        stop_button.configure(text="disable typing mode")   
+        stop_button.configure(text="disable typing mode") 
 
+def x_y_graber()->None:
+    screen.withdraw()
+    def on_click(x,y,pressed,button):
+        if pressed:
+            specified_positions_set.add((x,y))
+            screen.deiconify()
+            return False
+    listener=mouse_listener(on_click=on_click)
+    listener.start()
+    
+screen=tkinter.Tk()
+screen.geometry("400x400")
+screen.resizable(False,False)
+screen.title("Autoclicker")
+click_position_determiner=tkinter.IntVar()
+click_repetition_determiner=tkinter.IntVar()  
 label_dellay=tkinter.Label(text="enter the dellay between clicks")
 label_milliseconds=tkinter.Label(text="milliseconds")
 label_seconds=tkinter.Label(text="seconds")
@@ -69,10 +67,8 @@ click_repetition_label=tkinter.Label(text="click repetition")
 repeat_forever=tkinter.Radiobutton(text="repeat forever",value=0,variable=click_repetition_determiner)
 repeat_specified_number_times=tkinter.Radiobutton(text="repeat specified number of times",value=1,variable=click_repetition_determiner)
 specified_number_times=tkinter.Entry()
-start_key_label=tkinter.Label(text="start key")
-start_key_entry=tkinter.Entry(width=2)
-end_key_label=tkinter.Label(text="end key")
-end_key_entry=tkinter.Entry(width=2)
+hotkey_label=tkinter.Label(text="hotkey")
+hotkey_entry=tkinter.Entry(width=2)
 stop_button=tkinter.Button(text="enable typing mode",command=stop_auto_clicker)
 
 label_dellay.place(relx=0.3,rely=0.05)
@@ -103,48 +99,38 @@ click_repetition_label.place(relx=0.07,rely=0.61)
 repeat_forever.place(relx=0.07,rely=0.66)
 repeat_specified_number_times.place(relx=0.07,rely=0.71)
 specified_number_times.place(relx=0.08,rely=0.76)
-start_key_label.place(relx=0.07,rely=0.84)
-start_key_entry.place(relx=0.19,rely=0.84)
-end_key_label.place(relx=0.25,rely=0.84)
-end_key_entry.place(relx=0.37,rely=0.84)
+hotkey_label.place(relx=0.07,rely=0.84)
+hotkey_entry.place(relx=0.19,rely=0.84)
 stop_button.place(relx=0.47,rely=0.84)
 
 mouse_button_options.current("0")
 click_type_options.current("0")
 clicks_per_second.insert("0",10)
-end_key_entry.insert("0",".")
-start_key_entry.insert("0",".")
-
+hotkey_entry.insert("0",".")
+hotkey_entry.bind("<FocusIn>")
 for widget in screen.winfo_children():
     widget.configure(font=font)
     if isinstance(widget,tkinter.Entry) and not widget.get():
         widget.insert("0",0)
 
-def on_press(key):
+def on_press(key)->None:
     if auto_clicking:
-        start_key=KeyCode(char=start_key_entry.get())
-        end_key=KeyCode(char=end_key_entry.get())
+        start_key=KeyCode(char=hotkey_entry.get())
         global clicking
-        if start_key==end_key:
-            if key==start_key:
-                clicking=not clicking
-        else:
-            if key==start_key:
-                clicking=True
-            elif key==end_key:
-                clicking=False
-        auto_clicker_thread=Thread(target=auto_clicker) 
-        if clicking and not auto_clicker_thread.is_alive():                                           
+        if key==start_key:
+            clicking=not clicking
+        if clicking:
+            auto_clicker_thread=Thread(target=auto_clicker)
             auto_clicker_thread.start()
 
-def auto_clicker():
+def auto_clicker()->None:
     global clicking
-    for entry in [milliseconds,seconds,minutes,hours,days,clicks_per_second]:
+    for entry in {milliseconds,seconds,minutes,hours,days,clicks_per_second}:
         if not entry.get() or entry.get().isspace():
             entry.delete("0","end")
             entry.insert("0",0)
     try:
-        dellay=float(milliseconds.get())*0.001
+        dellay:float=float(milliseconds.get())*0.001
         dellay+=float(seconds.get())
         dellay+=float(minutes.get())*60
         dellay+=float(hours.get())*3600
@@ -154,18 +140,15 @@ def auto_clicker():
 
     if dellay not in locals() or not dellay:
         try:
-            dellay=1/float(clicks_per_second.get())
+            dellay:float=1/float(clicks_per_second.get())
         except ValueError:
             clicking=False
             return None
 
-    dict_options={"left click":Button.left,
-                  "right click":Button.right,
-                  "middle click":Button.middle,
-                  "single click":1,
-                  "double click":2}
-    mouse_button=dict_options.get(mouse_button_options.get())
-    click_type=dict_options.get(click_type_options.get())
+    dict_options:dict={"left click":Button.left,"right click":Button.right,"middle click":Button.middle,
+                       "single click":1,"double click":2}
+    mouse_button:Button=dict_options.get(mouse_button_options.get())
+    click_type:int=dict_options.get(click_type_options.get())
 
     if click_repetition_determiner.get()==1:
         try:
@@ -176,15 +159,15 @@ def auto_clicker():
     else:
         click_limit=float("inf")
 
-    specified_positions_list_local=specified_positions_list
+    specified_positions_set_local=specified_positions_set
     click_position_determiner_local=click_position_determiner
 
     number_clicks=0
     while clicking and number_clicks<click_limit:
-        if click_position_determiner_local==1 or not specified_positions_list_local:
+        if click_position_determiner_local or not specified_positions_set_local:
             mouse.click(mouse_button,count=click_type)
         else:
-            for position in specified_positions_list_local:
+            for position in specified_positions_set_local:
                 mouse.position=position
                 mouse.click(mouse_button,count=click_type)
         sleep(dellay)
@@ -195,4 +178,4 @@ def auto_clicker():
             
 listener=Listener(on_press=on_press)
 listener.start()
-screen.mainloop()
+print(screen.focus_get())

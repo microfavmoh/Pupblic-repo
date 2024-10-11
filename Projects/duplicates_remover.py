@@ -1,20 +1,21 @@
 from hashlib import sha256
-import os
+from os import remove,listdir
+from os.path import isdir,join
 from tkinter.filedialog import askdirectory
 
 hashes:set=set()
 
 def dup_remover(directory):
-    for filename in os.listdir(directory):
-        path:str=os.path.join(directory, filename)
-        if os.path.isdir(path):
+    for filename in listdir(directory):
+        path:str=join(directory, filename)
+        if isdir(path):
             dup_remover(path)
             continue
-        hash=sha256(open(path,'rb').read()).digest()
+        hash:str=sha256(open(path,'rb').read()).digest()
         if hash not in hashes:
             hashes.add(hash)
         else:
-            os.remove(path)
+            remove(path)
 
 directory:str=askdirectory()
 if directory:

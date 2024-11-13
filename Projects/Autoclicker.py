@@ -9,7 +9,7 @@ clicking:bool=False
 auto_clicking:bool=True
 mouse=Controller()
 font:tuple=("Product Sans",8)
-specified_positions_set:set[tuple[int]]={}
+specified_positions_set:list[tuple[int]]=[]
 
 def clear_config()->None:
     specified_positions_set.clear()
@@ -107,7 +107,6 @@ mouse_button_options.current("0")
 click_type_options.current("0")
 clicks_per_second.insert("0",10)
 hotkey_entry.insert("0",".")
-hotkey_entry.bind("<FocusIn>")
 for widget in screen.winfo_children():
     widget.configure(font=font)
     if isinstance(widget,tkinter.Entry) and not widget.get():
@@ -125,7 +124,7 @@ def on_press(key)->None:
 
 def auto_clicker()->None:
     global clicking
-    for entry in {milliseconds,seconds,minutes,hours,days,clicks_per_second}:
+    for entry in [milliseconds,seconds,minutes,hours,days,clicks_per_second]:
         if not entry.get() or entry.get().isspace():
             entry.delete("0","end")
             entry.insert("0",0)
@@ -172,10 +171,8 @@ def auto_clicker()->None:
                 mouse.click(mouse_button,count=click_type)
         sleep(dellay)
         number_clicks+=1
-    else:
-        clicking=False
-        return None
+    clicking=False
+    return None
             
 listener=Listener(on_press=on_press)
 listener.start()
-print(screen.focus_get())

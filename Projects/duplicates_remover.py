@@ -20,4 +20,4 @@ def dup_remover(directory):
 directory:str=askdirectory()
 if directory:
     dup_remover(directory)
-print("the operation was completed sucessfuly")     
+print("the operation was completed sucessfuly")

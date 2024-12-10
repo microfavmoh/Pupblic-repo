@@ -1,14 +1,15 @@
 from time import sleep
 from tkinter.ttk import Combobox
-from pynput.mouse import Controller,Listener as mouse_listener,Button as mouse_button
-from pynput.keyboard import Listener,KeyCode
+from pynput.mouse import Controller, Listener as mouse_listener, Button as mouse_button
+from pynput.keyboard import KeyCode, Listener
 from tkinter import *
 from tkinter.messagebox import showerror
 from threading import Thread
 
-mouse = Controller()
+mouse : Controller = Controller()
 clicking:bool = False
 autoclicking:bool = True
+redirect_input : bool = False
 specified_positions_list:list[tuple[int]] = []
 
 screen=Tk()
@@ -71,7 +72,9 @@ repeat_specified_number_times=Radiobutton(text="repeat specified number of times
 specified_number_times=Entry()
 hotkey_label=Label(text="hotkey")
 hotkey_entry=Entry(width=2)
-
+def inputdirector()->None: redirect_input = not redirect_input
+hotkey_entry.bind("FocusIn")
+hotkey_entry.bind("FocusOut",)
 def typing_mode()->None:
     global clicking,autoclicking
     autoclicking = not autoclicking
@@ -113,7 +116,12 @@ hotkey_entry.place(relx=0.19,rely=0.84)
 stop_button.place(relx=0.47,rely=0.84)
 
 for widget in screen.winfo_children():
-    widget.configure(font= ("Product Sans",8))
+    widget.configure(font = ("Product Sans", 8))
+
+hotkey_entry.insert(index="0",string=".")
+clicks_per_second.insert(index="0",string="10")
+mouse_button_options.set("Left click")
+click_type_combobox.set("single click")
 
 def keyboardmanager(key):
     global clicking
@@ -154,25 +162,22 @@ def autoclicker():
         clicking = False
         return None
     num_clicks:int=0
-    if not (click_position_determiner_get:=click_position_determiner.get()):
-        while clicking and num_clicks<click_limit:
-            mouse.click(button,click_type)
-            num_clicks+=1
-            sleep(dellay)
-    else:
-        specified_positions_list_loc=specified_positions_list
-        if click_position_determiner_get and not specified_positions_list_loc:
-            showerror("Error", "Specify the clicking positions")
-            clicking = False
-            return None
-        while clicking and num_clicks<click_limit:
+    specified_positions_list_loc = specified_positions_list
+    if (click_position_determiner_get:=click_position_determiner.get()) and not specified_positions_list_loc :
+        showerror("Error", "Specify the clicking positions")
+        clicking = False
+        return None
+    while clicking and num_clicks < click_limit:
+        if specified_positions_list_loc and click_position_determiner_get:
             for position in specified_positions_list_loc:
                 mouse.position=position
                 mouse.click(button,click_type)
                 num_clicks+=1
                 sleep(dellay)
-        clicking = False
-        return None
-
+        else:
+            mouse.click(button,click_type)
+            num_clicks+=1
+            sleep(dellay)
+            
 Listener(on_press=keyboardmanager).start()
 mainloop()
